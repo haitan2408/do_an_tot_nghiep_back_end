@@ -1,6 +1,7 @@
 package com.goruslan.socialgeeking.controller;
 
 import com.goruslan.socialgeeking.DTO.JwtResponse;
+import com.goruslan.socialgeeking.DTO.UpdatePassword;
 import com.goruslan.socialgeeking.DTO.UserDTO;
 import com.goruslan.socialgeeking.DTO.UserUpdateDTO;
 import com.goruslan.socialgeeking.Security.JwtTokenUtil;
@@ -20,6 +21,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -64,6 +66,7 @@ public class AuthController {
             JwtResponse jwtResponse = new JwtResponse(jwtToken, user1.getUsername(),user1.getEmail(),userDetails.getAuthorities());
             return ResponseEntity.ok(jwtResponse);
         } catch (Exception e) {
+            logger.error("Lỗi đăng nhập");
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -186,6 +189,20 @@ public class AuthController {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
         }catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    @PutMapping("/update-password/{id}")
+    public ResponseEntity<Void> updatePassword(@PathVariable(value = "id") Long idUser,
+                                            @RequestBody UpdatePassword updatePassword) {
+        try {
+            if (userService.updatePassword(idUser, updatePassword)) {
+                return new ResponseEntity<>(HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+        }catch (Exception e) {
+            logger.error("Lỗi update passwird");
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

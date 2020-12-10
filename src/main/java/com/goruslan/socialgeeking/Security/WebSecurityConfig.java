@@ -55,7 +55,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers("/login","/","/register","/recommendations","/post/{id}","/profile/*","/profile/information*").permitAll().and().
                 authorizeRequests().antMatchers("/admin/*","/post/*","/admin/post/comment/*").access("hasRole('ROLE_ADMIN')").and().
-                authorizeRequests().antMatchers("/post/*","/post/{id}/comments", "/updateImg/*", "/update-information").access("hasAnyRole('ROLE_ADMIN','ROLE_USER')").and().
+                authorizeRequests().antMatchers("/post/*","/post/{id}/comments", "/updateImg/*", "/update-information", "/update-password/*").access("hasAnyRole('ROLE_ADMIN','ROLE_USER')").and().
                 authorizeRequests().antMatchers().access("hasRole('ROLE_USER')")
                 .anyRequest().authenticated()
                 .and().cors();

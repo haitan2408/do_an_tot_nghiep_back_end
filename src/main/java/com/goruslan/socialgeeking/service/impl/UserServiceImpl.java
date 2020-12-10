@@ -1,5 +1,6 @@
 package com.goruslan.socialgeeking.service.impl;
 
+import com.goruslan.socialgeeking.DTO.UpdatePassword;
 import com.goruslan.socialgeeking.DTO.UserUpdateDTO;
 import com.goruslan.socialgeeking.domain.Post;
 import com.goruslan.socialgeeking.domain.User;
@@ -15,7 +16,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -129,5 +134,23 @@ public class UserServiceImpl implements UserService {
             userRepository.lockOrUnlockUser(id, !(user.isEnabled()));
             return true;
         }
+    }
+
+    @Override
+    public boolean updatePassword(Long idUser, UpdatePassword updatePassword) {
+        String emailUser = ((org.springframework.security.core.userdetails.User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+        User user = userRepository.findByIdAndEnabledIsTrue(idUser);
+        if(user == null || !(user.getEmail().equals(emailUser))) {
+            return false;
+        } else {
+            if (BCrypt.checkpw(updatePassword.getCurrentPassword(), user.getPassword())) {
+                PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
+                userRepository.updatePassword(passwordEncoder.encode(updatePassword.getNewPassword()),idUser);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
     }
 }

@@ -1,5 +1,6 @@
 package com.goruslan.socialgeeking.service;
 
+import com.goruslan.socialgeeking.DTO.UpdatePassword;
 import com.goruslan.socialgeeking.DTO.UserUpdateDTO;
 import com.goruslan.socialgeeking.domain.User;
 import com.goruslan.socialgeeking.repository.UserRepository;
@@ -37,4 +38,6 @@ public interface UserService {
     boolean deleteUserByAdmin(Long id);
 
     boolean lockOrUnlockUserByAdmin(Long id);
+
+    boolean updatePassword(Long idUser, UpdatePassword updatePassword);
 }

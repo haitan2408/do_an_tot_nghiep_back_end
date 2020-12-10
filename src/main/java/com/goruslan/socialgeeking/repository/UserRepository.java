@@ -37,4 +37,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "UPDATE user  set  enabled =:enabled where id = :id",
             nativeQuery = true)
     void lockOrUnlockUser(@Param("id") Long id,@Param("enabled")boolean enabled);
+
+    User findByIdAndEnabledIsTrue(Long id);
+
+    @Transactional
+    @Modifying
+    @Query(value = "UPDATE user  set  password =:password where id = :idUser and enabled = true",
+            nativeQuery = true)
+    void updatePassword(@Param("password")String password,@Param("idUser")Long idUser);
 }
