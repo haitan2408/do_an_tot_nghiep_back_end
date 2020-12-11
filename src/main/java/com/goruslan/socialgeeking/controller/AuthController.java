@@ -78,7 +78,7 @@ public class AuthController {
             User user = this.userService.getProfile(email);
             List<Post> posts = this.postService.findAllByUser(user);
             if(user==null) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             } else {
                 return new ResponseEntity<>(posts, HttpStatus.OK);
             }
@@ -92,7 +92,7 @@ public class AuthController {
         try {
             User user = this.userService.getProfile(email);
             if(user==null) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             } else {
                 return new ResponseEntity<>(user, HttpStatus.OK);
             }
@@ -160,7 +160,7 @@ public class AuthController {
         try {
             Page<User> users = userService.getAllUserByAdmin(PageRequest.of(page, size), search);
             if (users.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             return new ResponseEntity<>(users, HttpStatus.OK);
         } catch (Exception e) {

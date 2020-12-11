@@ -14,6 +14,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query(value = "select * from Post order by creation_date desc",nativeQuery = true)
     List<Post> findAllOderByCreationDate();
    List<Post> findAllByUser_Email(String email);
-    Page<Post> findAllByTitleContainingOrContentContainingOrUser_UsernameContaining(Pageable pageable, String title,
+    Page<Post> findAllByTitleContainingOrContentContainingOrUser_UsernameContainingOrderByCreationDateDesc(Pageable pageable, String title,
                                                                                     String content, String username);
 }

@@ -34,14 +34,14 @@ public class PostController {
     @Autowired
     private PostService postService;
 
-    @GetMapping("/")
-    public ResponseEntity<List<Post>> listPost() {
+    @GetMapping(value = "/",  params = {"size", "search"})
+    public ResponseEntity<Page<Post>> listPost(@RequestParam("size") int size, @RequestParam("search") String search) {
         try {
-            List<Post> postList = postService.findAll();
-            if (postList.size() == 0) {
+            Page<Post> posts = postService.getAllPostByAdmin(PageRequest.of(0, size), search);
+            if (posts.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
-            return new ResponseEntity<>(postList, HttpStatus.OK);
+            return new ResponseEntity<>(posts, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

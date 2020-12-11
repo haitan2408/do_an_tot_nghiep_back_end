@@ -42,7 +42,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public Page<Post> getAllPostByAdmin(Pageable pageable, String search) {
-        Page<Post> posts = postRepository.findAllByTitleContainingOrContentContainingOrUser_UsernameContaining(pageable,
+        Page<Post> posts = postRepository.findAllByTitleContainingOrContentContainingOrUser_UsernameContainingOrderByCreationDateDesc(pageable,
                 search, search, search);
         return posts;
     }

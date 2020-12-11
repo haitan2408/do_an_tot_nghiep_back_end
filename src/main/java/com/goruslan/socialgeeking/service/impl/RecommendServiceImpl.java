@@ -1,85 +1,108 @@
 package com.goruslan.socialgeeking.service.impl;
+
+import com.goruslan.socialgeeking.controller.PostController;
 import com.goruslan.socialgeeking.domain.RecommendationRecord;
+import com.goruslan.socialgeeking.domain.User;
 import com.goruslan.socialgeeking.service.RecommendService;
+import com.goruslan.socialgeeking.service.UserService;
+import org.aspectj.util.FileUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import weka.core.*;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.core.neighboursearch.LinearNNSearch;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 @Service
 public class RecommendServiceImpl implements RecommendService {
-    public void recommendations() throws Exception {
-        DataSource source = new DataSource("dataset//language.arff");
-        Instances dataset = source.getDataSet();
+    private static final Logger logger = LoggerFactory.getLogger(RecommendServiceImpl.class);
+    @Autowired
+    private UserService userService;
 
-        source = new DataSource("dataset//user.arff");
-        Instances userRating = source.getDataSet();
-        Instance userData = userRating.firstInstance();
+    public RecommendationRecord[] recommendations(String email) throws Exception {
+        User user = userService.findByEmail(email);
+        if (user == null) {
+            return null;
+        } else {
+            DataSource source = new DataSource("dataset//language.arff");
+            Instances dataset = source.getDataSet();
+            new RecommendServiceImpl().createNewFile(email);
+            source = new DataSource("dataset//"+email + ".arff");
+            Instances userRating = source.getDataSet();
+            Instance userData = userRating.firstInstance();
 
-        LinearNNSearch kNN = new LinearNNSearch(dataset);
-        Instances neighbors = null;
-        double[] distances = null;
+            LinearNNSearch kNN = new LinearNNSearch(dataset);
+            Instances neighbors = null;
+            double[] distances = null;
 
-        try {
-            neighbors = kNN.kNearestNeighbours(userData, 5);
-            distances = kNN.getDistances();
-        } catch (Exception e) {
-            System.out.println("Neighbors could not be found.");
-            return;
-        }
+            try {
+                neighbors = kNN.kNearestNeighbours(userData, 5);
+                distances = kNN.getDistances();
+            } catch (Exception e) {
+                logger.error("Neighbors could not be found.");
+            }
 
-        double[] similarities = new double[distances.length];
-        for (int i = 0; i < distances.length; i++) {
-            similarities[i] = 1.0 / distances[i];
-        }
+            double[] similarities = new double[distances.length];
+            for (int i = 0; i < distances.length; i++) {
+                similarities[i] = 1.0 / distances[i];
+            }
 
-//        Enumeration nInstances = neighbors.enumerateInstances();
-
-        Map<String, List<Integer>> recommendations = new HashMap<>();
-        for (int i = 0; i < neighbors.numInstances(); i++) {
-            Instance currNeighbor = neighbors.get(i);
-
-            for (int j = 0; j < currNeighbor.numAttributes(); j++) {
-                if (userData.value(j) < 1) {
-                    String attrName = userData.attribute(j).name();
-                    List<Integer> lst = new ArrayList<Integer>();
-                    if (recommendations.containsKey(attrName)) {
-                        lst = recommendations.get(attrName);
+            Map<String, List<Integer>> recommendations = new HashMap<>();
+            for (int i = 0; i < neighbors.numInstances(); i++) {
+                Instance currNeighbor = neighbors.get(i);
+                for (int j = 0; j < currNeighbor.numAttributes(); j++) {
+                    if (userData.value(j) < 1) {
+                        String attrName = userData.attribute(j).name();
+                        List<Integer> lst = new ArrayList<Integer>();
+                        if (recommendations.containsKey(attrName)) {
+                            lst = recommendations.get(attrName);
+                        }
+                        lst.add((int) currNeighbor.value(j));
+                        recommendations.put(attrName, lst);
                     }
-
-                    lst.add((int) currNeighbor.value(j));
-                    recommendations.put(attrName, lst);
                 }
+
             }
 
-        }
+            List<RecommendationRecord> finalRanks = new ArrayList<>();
+            Iterator<String> it = recommendations.keySet().iterator();
+            while (it.hasNext()) {
+                String atrName = it.next();
+                double totalImpact = 0;
+                double weightedSum = 0;
+                List<Integer> ranks = recommendations.get(atrName);
+                for (int i = 0; i < ranks.size(); i++) {
+                    int val = ranks.get(i);
+                    totalImpact += similarities[i];
+                    weightedSum += similarities[i] * val;
+                }
+                RecommendationRecord rec = new RecommendationRecord();
+                rec.setAttributeName(atrName);
+                rec.setScore(weightedSum / totalImpact);
 
-        List<RecommendationRecord> finalRanks = new ArrayList<>();
-
-        Iterator<String> it = recommendations.keySet().iterator();
-        while (it.hasNext()) {
-            String atrName = it.next();
-            double totalImpact = 0;
-            double weightedSum = 0;
-            List<Integer> ranks = recommendations.get(atrName);
-            for (int i = 0; i < ranks.size(); i++) {
-                int val = ranks.get(i);
-                totalImpact += similarities[i];
-                weightedSum += (double) similarities[i] * val;
+                finalRanks.add(rec);
             }
-            RecommendationRecord rec = new RecommendationRecord();
-            rec.setAttributeName(atrName);
-            rec.setScore(weightedSum / totalImpact);
-
-            finalRanks.add(rec);
+            Collections.sort(finalRanks);
+            return new RecommendationRecord[]{finalRanks.get(0), finalRanks.get(1), finalRanks.get(2)};
         }
-        Collections.sort(finalRanks);
+    }
 
-        // print top 3 recommendations
-        System.out.println(finalRanks.get(0));
-        System.out.println(finalRanks.get(1));
-        System.out.println(finalRanks.get(2));
+    private void createNewFile(String email) throws IOException {
+        File myObj = new File("src\\main\\resources\\dataset\\" + email + ".arff");
+        myObj.delete();
+        myObj.createNewFile();
+        FileUtil.copyFile(new File("src\\main\\resources\\dataset\\user.arff"), myObj);
+        BufferedWriter writer = new BufferedWriter(new FileWriter("src\\main\\resources\\dataset\\" + email + ".arff", true));
+        writer.newLine();
+        writer.write("0, 0, 9, 8, 10, 10, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0");
+        writer.flush();
+        writer.close();
     }
 }
