@@ -1,8 +1,10 @@
 package com.goruslan.socialgeeking.service.impl;
 
 import com.goruslan.socialgeeking.controller.PostController;
+import com.goruslan.socialgeeking.domain.DataRecommend;
 import com.goruslan.socialgeeking.domain.RecommendationRecord;
 import com.goruslan.socialgeeking.domain.User;
+import com.goruslan.socialgeeking.service.DataRecommendService;
 import com.goruslan.socialgeeking.service.RecommendService;
 import com.goruslan.socialgeeking.service.UserService;
 import org.aspectj.util.FileUtil;
@@ -26,6 +28,9 @@ public class RecommendServiceImpl implements RecommendService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private DataRecommendService dataRecommendService;
+
     public RecommendationRecord[] recommendations(String email) throws Exception {
         User user = userService.findByEmail(email);
         if (user == null) {
@@ -33,8 +38,8 @@ public class RecommendServiceImpl implements RecommendService {
         } else {
             DataSource source = new DataSource("dataset//language.arff");
             Instances dataset = source.getDataSet();
-            new RecommendServiceImpl().createNewFile(email);
-            source = new DataSource("dataset//"+email + ".arff");
+            createNewFileData(email);
+            source = new DataSource("dataset//" + email + ".arff");
             Instances userRating = source.getDataSet();
             Instance userData = userRating.firstInstance();
 
@@ -94,7 +99,7 @@ public class RecommendServiceImpl implements RecommendService {
         }
     }
 
-    private void createNewFile(String email) throws IOException {
+    private void createNewFileData(String email) throws IOException {
         File myObj = new File("src\\main\\resources\\dataset\\" + email + ".arff");
         myObj.delete();
         myObj.createNewFile();
@@ -102,6 +107,21 @@ public class RecommendServiceImpl implements RecommendService {
         BufferedWriter writer = new BufferedWriter(new FileWriter("src\\main\\resources\\dataset\\" + email + ".arff", true));
         writer.newLine();
         writer.write("0, 0, 9, 8, 10, 10, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0");
+        writer.flush();
+        writer.close();
+    }
+
+    public void createNewFileDataRecommend() throws IOException {
+        File myObj = new File("src\\main\\resources\\dataset\\language.arff");
+        myObj.delete();
+        myObj.createNewFile();
+        FileUtil.copyFile(new File("src\\main\\resources\\dataset\\user.arff"), myObj);
+        BufferedWriter writer = new BufferedWriter(new FileWriter("src\\main\\resources\\dataset\\language.arff", true));
+        List<DataRecommend> dataRecommends = dataRecommendService.findAll();
+        for (DataRecommend dataRecommend : dataRecommends) {
+            writer.newLine();
+            writer.write(dataRecommend.toString());
+        }
         writer.flush();
         writer.close();
     }
