@@ -41,7 +41,7 @@ public class SocialgeekingApplication {
         mailSender.setPort(587);
 
         mailSender.setUsername("haitan28102408@gmail.com");
-        mailSender.setPassword("bigboss28101998");
+        mailSender.setPassword("bigboss281024081998");
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");

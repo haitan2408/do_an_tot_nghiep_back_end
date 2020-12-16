@@ -31,14 +31,15 @@ public class RecommendServiceImpl implements RecommendService {
     @Autowired
     private DataRecommendService dataRecommendService;
 
-    public RecommendationRecord[] recommendations(String email) throws Exception {
+    public RecommendationRecord[] recommendations(DataRecommend dataRecommend) throws Exception {
+        String email =dataRecommend.getEmailAddress();
         User user = userService.findByEmail(email);
         if (user == null) {
             return null;
         } else {
             DataSource source = new DataSource("dataset//language.arff");
             Instances dataset = source.getDataSet();
-            createNewFileData(email);
+            createNewFileData(dataRecommend);
             source = new DataSource("dataset//" + email + ".arff");
             Instances userRating = source.getDataSet();
             Instance userData = userRating.firstInstance();
@@ -99,14 +100,15 @@ public class RecommendServiceImpl implements RecommendService {
         }
     }
 
-    private void createNewFileData(String email) throws IOException {
+    private void createNewFileData(DataRecommend dataRecommend) throws IOException {
+        String email =dataRecommend.getEmailAddress();
         File myObj = new File("src\\main\\resources\\dataset\\" + email + ".arff");
         myObj.delete();
         myObj.createNewFile();
         FileUtil.copyFile(new File("src\\main\\resources\\dataset\\user.arff"), myObj);
         BufferedWriter writer = new BufferedWriter(new FileWriter("src\\main\\resources\\dataset\\" + email + ".arff", true));
         writer.newLine();
-        writer.write("0, 0, 9, 8, 10, 10, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0");
+        writer.write(dataRecommend.toString());
         writer.flush();
         writer.close();
     }
