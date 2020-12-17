@@ -32,18 +32,17 @@ public class RecommendServiceImpl implements RecommendService {
     private DataRecommendService dataRecommendService;
 
     public RecommendationRecord[] recommendations(DataRecommend dataRecommend) throws Exception {
-        String email =dataRecommend.getEmailAddress();
+        String email = dataRecommend.getEmailAddress();
         User user = userService.findByEmail(email);
         if (user == null) {
             return null;
         } else {
-            DataSource source = new DataSource("dataset//language.arff");
+            DataSource source = new DataSource("src\\main\\resources\\dataset\\language.arff");
             Instances dataset = source.getDataSet();
             createNewFileData(dataRecommend);
-            source = new DataSource("dataset//" + email + ".arff");
-            Instances userRating = source.getDataSet();
-            Instance userData = userRating.firstInstance();
-
+            DataSource source1 = new DataSource("src\\main\\resources\\dataset\\" + email + ".arff");
+            Instances userRating = source1.getDataSet();
+            Instance userData = userRating.lastInstance();
             LinearNNSearch kNN = new LinearNNSearch(dataset);
             Instances neighbors = null;
             double[] distances = null;
@@ -57,7 +56,11 @@ public class RecommendServiceImpl implements RecommendService {
 
             double[] similarities = new double[distances.length];
             for (int i = 0; i < distances.length; i++) {
-                similarities[i] = 1.0 / distances[i];
+                if (distances[i] == 0) {
+                    similarities[i] = 1;
+                } else {
+                    similarities[i] = 1.0 / distances[i];
+                }
             }
 
             Map<String, List<Integer>> recommendations = new HashMap<>();
@@ -100,31 +103,43 @@ public class RecommendServiceImpl implements RecommendService {
         }
     }
 
-    private void createNewFileData(DataRecommend dataRecommend) throws IOException {
-        String email =dataRecommend.getEmailAddress();
-        File myObj = new File("src\\main\\resources\\dataset\\" + email + ".arff");
-        myObj.delete();
-        myObj.createNewFile();
-        FileUtil.copyFile(new File("src\\main\\resources\\dataset\\user.arff"), myObj);
-        BufferedWriter writer = new BufferedWriter(new FileWriter("src\\main\\resources\\dataset\\" + email + ".arff", true));
-        writer.newLine();
-        writer.write(dataRecommend.toString());
-        writer.flush();
-        writer.close();
-    }
-
-    public void createNewFileDataRecommend() throws IOException {
-        File myObj = new File("src\\main\\resources\\dataset\\language.arff");
-        myObj.delete();
-        myObj.createNewFile();
-        FileUtil.copyFile(new File("src\\main\\resources\\dataset\\user.arff"), myObj);
-        BufferedWriter writer = new BufferedWriter(new FileWriter("src\\main\\resources\\dataset\\language.arff", true));
-        List<DataRecommend> dataRecommends = dataRecommendService.findAll();
-        for (DataRecommend dataRecommend : dataRecommends) {
+    @Override
+    public void createNewFileData(DataRecommend dataRecommend) {
+        try {
+            String email = dataRecommend.getEmailAddress();
+            File myObj = new File("src\\main\\resources\\dataset\\" + email + ".arff");
+            myObj.delete();
+            myObj.createNewFile();
+            FileUtil.copyFile(new File("src\\main\\resources\\dataset\\user.arff"), myObj);
+            BufferedWriter writer = new BufferedWriter(new FileWriter("src\\main\\resources\\dataset\\" + email + ".arff", true));
             writer.newLine();
             writer.write(dataRecommend.toString());
+            writer.flush();
+            writer.close();
+
+        } catch (IOException e) {
+            logger.error(e.getMessage());
         }
-        writer.flush();
-        writer.close();
+
+    }
+
+    public void createNewFileDataRecommend() {
+        try {
+            File myObj = new File("src\\main\\resources\\dataset\\language.arff");
+            myObj.delete();
+            myObj.createNewFile();
+            FileUtil.copyFile(new File("src\\main\\resources\\dataset\\user.arff"), myObj);
+            BufferedWriter writer = new BufferedWriter(new FileWriter("src\\main\\resources\\dataset\\language.arff", true));
+            List<DataRecommend> dataRecommends = dataRecommendService.findAll();
+            for (DataRecommend dataRecommend : dataRecommends) {
+                writer.newLine();
+                writer.write(dataRecommend.toString());
+            }
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+        }
+
     }
 }

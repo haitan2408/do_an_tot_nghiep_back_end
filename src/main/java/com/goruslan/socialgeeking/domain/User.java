@@ -10,7 +10,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
 import java.util.*;
@@ -20,7 +19,6 @@ import java.util.*;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString
 @PasswordsMatch
 public class User implements UserDetails {
 

@@ -19,7 +19,7 @@ public class RecommendationsController {
 
     @PostMapping("/recommendations")
     public ResponseEntity<RecommendationRecord[]> recommendations(@RequestBody DataRecommend dataRecommend) throws Exception {
-
+        recommendService.createNewFileData(dataRecommend);
            RecommendationRecord[] recommendationRecords = recommendService.recommendations(dataRecommend);
            if(recommendationRecords == null) {
                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

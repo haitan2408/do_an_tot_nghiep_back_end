@@ -10,4 +10,6 @@ public interface RecommendService {
     RecommendationRecord[] recommendations(DataRecommend dataRecommend) throws Exception;
 
     void createNewFileDataRecommend() throws IOException;
+
+    void createNewFileData(DataRecommend dataRecommend);
 }
