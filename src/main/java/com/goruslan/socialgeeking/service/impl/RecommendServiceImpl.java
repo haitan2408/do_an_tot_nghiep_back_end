@@ -57,7 +57,7 @@ public class RecommendServiceImpl implements RecommendService {
             double[] similarities = new double[distances.length];
             for (int i = 0; i < distances.length; i++) {
                 if (distances[i] == 0) {
-                    similarities[i] = 1;
+                    similarities[i] = 0;
                 } else {
                     similarities[i] = 1.0 / distances[i];
                 }
@@ -67,7 +67,7 @@ public class RecommendServiceImpl implements RecommendService {
             for (int i = 0; i < neighbors.numInstances(); i++) {
                 Instance currNeighbor = neighbors.get(i);
                 for (int j = 0; j < currNeighbor.numAttributes(); j++) {
-                    if (userData.value(j) < 1) {
+                    if (userData.value(j) < 2) {
                         String attrName = userData.attribute(j).name();
                         List<Integer> lst = new ArrayList<Integer>();
                         if (recommendations.containsKey(attrName)) {
